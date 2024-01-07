@@ -27,76 +27,60 @@ valid_columns = [
 def home():
     return "Welcome to the Fuel Stations API!"
 
-@app.route('/fuel_stations', methods=['GET'])
-def get_fuel_stations():
+@app.route('/ev_stations', methods=['GET'])
+def get_ev_stations():
     try:
         # Connect to the SQLite database
         conn = sqlite3.connect(database_path)
-
         # Create a cursor object to execute SQL queries
         cursor = conn.cursor()
-
         # Get the query parameters from the request
         filters = {key: request.args.get(key) for key in request.args if key in valid_columns}
-
         # Build the SQL query based on the specified filters
         query = f"SELECT * FROM ev_stations WHERE {' AND '.join([f'{key}=?' for key in filters])};" if filters else "SELECT * FROM ev_stations;"
-
         # Execute the SQL query
         cursor.execute(query, tuple(filters.values()))
-
         # Fetch the results
         results = cursor.fetchall()
-
         # Close the database connection
         conn.close()
-
         # Check if results exist
         if not results:
             return jsonify({"message": "No results found"}), 404
-
         # Convert the results to a Pandas DataFrame for easy manipulation
         columns = [description[0] for description in cursor.description]
         df = pd.DataFrame(results, columns=columns)
-
         # Convert the DataFrame to JSON and return the response
         return jsonify(df.to_dict(orient='records'))
-
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/fuel_stations/city/Sacramento', methods=['GET'])
-def get_fuel_stations_in_sacramento():
+@app.route('/ev_stations/city/<city_name>', methods=['GET'])
+def get_ev_stations_by_city(city_name):
     try:
         # Connect to the SQLite database
         conn = sqlite3.connect(database_path)
-
         # Create a cursor object to execute SQL queries
         cursor = conn.cursor()
-
-        # Build the SQL query to get stations in Sacramento, CA
-        query = "SELECT * FROM ev_stations WHERE city='Sacramento' AND state='CA';"
-
+        # Build the SQL query to get stations in the specified city in California
+        if city_name.lower() == 'sacramento':
+            query = "SELECT * FROM ev_stations WHERE city=? AND state='CA' AND city='Sacramento';"
+        else:
+            query = "SELECT * FROM ev_stations WHERE city=? AND state='CA';"
         # Execute the SQL query
-        cursor.execute(query)
-
+        cursor.execute(query, (city_name,))
         # Fetch the results
         results = cursor.fetchall()
-
         # Close the database connection
         conn.close()
-
         # Check if results exist
         if not results:
-            return jsonify({"message": "No results found in Sacramento, CA"}), 404
-
+            return jsonify({"message": f"No results found in {city_name}, CA"}), 404
         # Convert the results to a Pandas DataFrame for easy manipulation
         columns = [description[0] for description in cursor.description]
         df = pd.DataFrame(results, columns=columns)
-
         # Convert the DataFrame to JSON and return the response
         return jsonify(df.to_dict(orient='records'))
-
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
 
