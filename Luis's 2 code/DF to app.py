@@ -1,63 +1,58 @@
 from flask import Flask, render_template
 import pandas as pd
 import sqlite3
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
 
 app = Flask(__name__)
 
-# Route to display DataFrame data
-@app.route('/')
-def display_data():
-    # Connect to SQLite database and retrieve data into a DataFrame
+# Function to fetch unique values from a column along with their counts
+def fetch_values_with_counts():
     conn = sqlite3.connect('california2.db')  # Replace with your database path
-    query = 'SELECT * FROM California'  # Replace with your SQL query
-    df = pd.read_sql_query(query, conn)    
+    cursor = conn.cursor()
+
+    # Replace 'your_column' and 'your_table' with your column and table names
+    query = 'SELECT city, COUNT(*) AS counts FROM California GROUP BY city'
+
+    cursor.execute(query)
+    values_counts = cursor.fetchall()  # Fetch unique values with their counts
+
     conn.close()
 
-    #remove duplicate variables:
-    df = df.drop_duplicates()
-   
-    # Render DataFrame in HTML format using Pandas' to_html() method
-    data_html = df.to_html(index=False)  # Set index=False to not display DataFrame index
+    # Create a DataFrame from the fetched values with counts
+    df = pd.DataFrame(values_counts, columns=['Value', 'Counts'])
+    return df
 
-    # Pass DataFrame HTML representation to the template
-    return render_template('index.html', table=data_html)
+# Route to display DataFrame with values and their counts along with a bar graph of top 10 cities
+@app.route('/')
+def display_values_with_counts():
+    df_values_counts = fetch_values_with_counts()
 
-# #Create a df for total amount of evs per city:
-# # Function to fetch total count of values in a column and create a DataFrame
-# def fetch_total_count():
-#     conn = sqlite3.connect('california2.db')  # Replace with your database path
-#     query = 'SELECT COUNT(*) AS total_count FROM california'  # Replace with your SQL query
-#     cursor = conn.cursor()
-#     cursor.execute(query)
-#     total_count = cursor.fetchone()[0]
-#     conn.close()
+    # Sort DataFrame by counts and select the top 10 cities
+    df_top_10 = df_values_counts.nlargest(10, 'Counts')
 
-#     # Create DataFrame from the total count data
-#     df_total_count = pd.DataFrame({'Total_Count': [total_count]})
-#     return df_total_count
+    # Generate bar graph for top 10 cities using Matplotlib
+    plt.figure(figsize=(10, 6))
+    plt.bar(df_top_10['Value'], df_top_10['Counts'])
+    plt.xlabel('City')
+    plt.ylabel('Counts')
+    plt.title('Top 10 Cities by Counts')
+    plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
 
-# # Route to display DataFrame data and total count
-# @app.route('/')
-# def display_data():
-#     # Connect to SQLite database and retrieve data into a DataFrame
-#     conn = sqlite3.connect('california2.db')  # Replace with your database path
-#     query = 'SELECT * FROM California'  # Replace with your SQL query
-#     df_from_db = pd.read_sql_query(query, conn)
-#     conn.close()
+    # Save the plot to a bytes object
+    img = BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    graph_url = base64.b64encode(img.getvalue()).decode()
+    plt.close()
 
-#     # Remove duplicate values from the fetched DataFrame
-#     df_from_db = df_from_db.drop_duplicates()
+    # Render DataFrame and bar graph in HTML format using Pandas' to_html() method
+    data_html = df_top_10.to_html(index=False)
 
-#     # Fetch the total count of values in the column
-#     df_total_count = fetch_total_count()
-
-#     # Render DataFrame in HTML format using Pandas' to_html() method
-#     data_html_from_db = df_from_db.to_html(index=False)  # Set index=False to not display DataFrame index
-#     data_html_total_count = df_total_count.to_html(index=False)
-
-#     # Pass DataFrame HTML representations to the template
-#     return render_template('index.html', data_html_from_db=data_html_from_db, data_html_total_count=data_html_total_count)
-
+    # Pass DataFrame HTML representation and graph URL to the template
+    return render_template('index.html', data_html=data_html, graph_url=graph_url)
 
 if __name__ == '__main__':
     app.run(debug=True)
+
