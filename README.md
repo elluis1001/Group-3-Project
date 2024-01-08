@@ -41,6 +41,8 @@ Steps to Use:
 
 
 
+# Ethical considerations 
+In the project, ethical considerations take center stage, emphasizing a commitment to safeguarding user privacy and ensuring responsible data practices. Anonymization of sensitive information is paramount, and the project prioritizes aggregated insights over individual data points. Informed consent is respected, and users are provided with clear explanations of data usage. Acknowledging potential biases, the project aims for transparency, documenting sources, methodologies, and any external code. Security measures are highlighted to protect data integrity, and a dedication to addressing community impact and feedback fosters an accountable and open approach. Continuous evaluation ensures ongoing ethical standards improvement throughout the project's lifecycle.
 
 ## Packages and Libraries
 - Python
