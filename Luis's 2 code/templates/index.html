@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Data Display with Bar Graph</title>
+    <title>Data Display</title>
 </head>
 <body>
-    <h2>Data from 'city' Column with Counts</h2>
-    <!-- Display DataFrame with values and counts -->
+    <!-- Display the DataFrame -->
+    <h2>DataFrame:</h2>
     {{ data_html | safe }}
 
-    <hr>
-
-    <h2>Bar Graph</h2>
-    <!-- Display bar graph -->
+    <!-- Display the bar graph -->
+    <h2>Bar Graph:</h2>
     <img src="data:image/png;base64,{{ graph_url }}" alt="Bar Graph">
+
+    <!-- Display the map -->
+    <h2>Map:</h2>
+    <iframe src="{{ map_html }}" width="800" height="600" frameborder="0" scrolling="no"></iframe>
 </body>
 </html>
+
 
 

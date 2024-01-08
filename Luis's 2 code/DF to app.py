@@ -1,9 +1,10 @@
 from flask import Flask, render_template
 import pandas as pd
 import sqlite3
-import matplotlib.pyplot as plt
+import folium
 from io import BytesIO
 import base64
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
@@ -24,9 +25,17 @@ def fetch_values_with_counts():
     df = pd.DataFrame(values_counts, columns=['Value', 'Counts'])
     return df
 
-# Route to display DataFrame with values and their counts along with a bar graph of top 10 cities
+# Function to fetch city locations from the database
+def fetch_city_locations():
+    conn = sqlite3.connect('california2.db')  # Replace with your database path
+    query = 'SELECT city, latitude, longitude FROM California GROUP BY city'  # Replace with your SQL query
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df
+
+# Route to display DataFrame data, total count, and a bar graph
 @app.route('/')
-def display_values_with_counts():
+def display_data():
     df_values_counts = fetch_values_with_counts()
 
     # Sort DataFrame by counts and select the top 10 cities
@@ -50,9 +59,21 @@ def display_values_with_counts():
     # Render DataFrame and bar graph in HTML format using Pandas' to_html() method
     data_html = df_top_10.to_html(index=False)
 
-    # Pass DataFrame HTML representation and graph URL to the template
-    return render_template('index.html', data_html=data_html, graph_url=graph_url)
+    # Fetch city locations and create a folium map
+    df_city_locations = fetch_city_locations()
+    map = folium.Map(location=[37.7749, -122.4194], zoom_start=6)  # Map centered at California
+
+    # Add markers for city locations to the map
+    for index, row in df_city_locations.iterrows():
+        folium.Marker([row['latitude'], row['longitude']], popup=row['city']).add_to(map)
+
+    # Save the map to an HTML file
+    map.save('templates/map.html')
+
+    # Pass DataFrame HTML representation, graph URL, and map HTML representation to the template
+    return render_template('index.html', data_html=data_html, graph_url=graph_url, map_html='map.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
