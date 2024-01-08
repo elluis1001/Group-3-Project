@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <meta charset="UTF-8">
+    <title>California EV Stations</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .chart-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .chart {
+            width: 45%;
+            margin: 10px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .chart img {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 95%; /* Increased width */
+            margin: 0 auto;
+        }
+
+        th, td {
+            padding: 12px; /* Increased padding */
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Top 10 California Cities by EV Station Counts</h1>
+    {{ data_html | safe }}
+
+    <h1>Distribution of EV Station Types</h1>
+    {{ ev_types | safe }}
+
+    
+    <h1>EV Station Dictionary</h1>
+    {{ df_EV_Dictionary | safe }}
+
+    <h1>Graph</h1>
+    <img src="data:image/png;base64,{{ graph_url }}" alt="Graph">
+
+</body>
+</html>
